@@ -1,8 +1,0 @@
-case,name,email,role,expectedStatus,expectedCode,expectedField
-Valid tester,Sara Khan,sara.khan@example.com,tester,201,,
-Valid manager,QA Manager,qa.manager@example.com,manager,201,,
-Name at the minimum (2 chars),Al,two.chars@example.com,developer,201,,
-Name too short (1 char),A,one.char@example.com,tester,400,VALIDATION_FAILED,name
-Email without @,Bad Email,not-an-email,tester,400,VALIDATION_FAILED,email
-Role not in the list,Role Check,role.check@example.com,admin,400,VALIDATION_FAILED,role
-Email already used,Asha Again,asha@example.com,tester,409,EMAIL_TAKEN,

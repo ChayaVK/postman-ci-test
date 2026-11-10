@@ -10,7 +10,6 @@ const G = require('./lib/graphql');
 const S = require('./lib/soap');
 const WS = require('./lib/ws');
 const DOCS = require('./lib/docs');
-const SHOP = require('./lib/shop');
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -22,8 +21,6 @@ const ROUTES = [
   ['GET', '/health', (req, res) => send(res, 200, { status: 'UP', time: new Date().toISOString() })],
   ['POST', '/api/reset', M.doReset],
   ['GET', '/debug/db', M.dbView],
-  ['GET', '/shop', SHOP.loginPage],
-  ['GET', '/shop/orders', SHOP.ordersPage],
 
   ['GET', '/api/users', R.listUsers],
   ['GET', '/api/v2/users', R.listUsers],

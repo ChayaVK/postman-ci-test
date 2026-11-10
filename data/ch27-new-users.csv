@@ -1,6 +1,0 @@
-name,email,role,expectedStatus,expectedCode
-Newman User,newman.user@example.com,tester,201,
-Duplicate Email,asha@example.com,tester,409,EMAIL_TAKEN
-Bad Email,not-an-email,tester,400,VALIDATION_FAILED
-A,short.name@example.com,tester,400,VALIDATION_FAILED
-Wrong Role,wrong.role@example.com,admin,400,VALIDATION_FAILED

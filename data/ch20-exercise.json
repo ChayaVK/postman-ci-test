@@ -1,5 +1,0 @@
-[
-  { "case": "Missing email is rejected",
-    "body": { "name": "No Email" },
-    "expectedStatus": 400, "expectedField": "email" }
-]

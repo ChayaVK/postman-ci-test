@@ -1,2 +1,0 @@
-Notes from the QAMadeEasy API course.
-This file is used by the upload examples.

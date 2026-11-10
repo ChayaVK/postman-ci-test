@@ -1,3 +1,0 @@
-case,name,email,role,expectedStatus,expectedCode,expectedField
-Email already used (other case),Asha Upper,ASHA@EXAMPLE.COM,tester,409,EMAIL_TAKEN,
-Name of only spaces,"   ",spaces@example.com,tester,400,VALIDATION_FAILED,name

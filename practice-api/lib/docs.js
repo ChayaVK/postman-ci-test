@@ -55,8 +55,6 @@ const GROUPS = [
     ['GET', '/api/cors/open', 'Allows any origin (Access-Control-Allow-Origin: *)'],
     ['GET', '/api/cors/closed', 'No CORS header'],
     ['GET', '/cors-demo', 'Browser page that shows CORS in action'],
-    ['GET', '/shop', 'Small web shop: log in page (for UI and API + UI tests)'],
-    ['GET', '/shop/orders', 'Small web shop: My Orders page (needs a login first)'],
   ]],
   ['Other API styles', [
     ['POST', '/graphql', 'GraphQL: {"query":"{ users { id name } }"}. Schema: GET /graphql/schema'],

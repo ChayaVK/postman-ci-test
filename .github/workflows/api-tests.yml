@@ -1,14 +1,12 @@
-# GitHub Actions workflow: copy this file to .github/workflows/api-tests.yml
-# in a repository whose root holds practice-api/, collections/ and data/.
+# GitHub Actions workflow. Copy this file to .github/workflows/api-tests.yml in a repository
+# whose root holds the folders practice-api/, collections/ and data/ from this ZIP.
 name: API tests
 
 on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    - cron: '30 2 * * *'    # every day at 02:30 UTC
-  workflow_dispatch:         # adds a "Run workflow" button
+  workflow_dispatch:         # adds a "Run workflow" button on the Actions tab
 
 jobs:
   api-tests:
@@ -37,17 +35,21 @@ jobs:
             if curl -sf http://localhost:3000/health; then exit 0; fi
             sleep 1
           done
-          echo "The API did not start within 30 seconds:"
-          cat api.log
-          exit 1
+          echo "The API did not start within 30 seconds:"; cat api.log; exit 1
 
       - name: Run the API tests
         run: >
-          newman run collections/ch27-newman-suite.postman_collection.json
+          newman run collections/rest-essentials.postman_collection.json
           -e collections/local.postman_environment.json
           -r cli,junit,htmlextra
           --reporter-junit-export reports/junit.xml
           --reporter-htmlextra-export reports/api-report.html
+
+      - name: Run the data-driven tests
+        run: >
+          newman run collections/rest-essentials.postman_collection.json
+          -e collections/local.postman_environment.json
+          --folder "06 Data-driven: create users" -d data/users.csv
 
       - name: Upload the reports
         if: always()          # also when the tests failed
