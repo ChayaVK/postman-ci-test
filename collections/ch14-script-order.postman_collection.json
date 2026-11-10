@@ -1,0 +1,156 @@
+{
+  "info": {
+    "_postman_id": "721425dc-f799-56e5-b7f4-296f2e5643fc",
+    "name": "Ch 14 - Script execution order",
+    "description": "Proves the order in which Postman runs scripts: collection, then folder, then request, both before the request is sent (pre-request) and after the response arrives (post-response). Run it and read the Console or the Newman output.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Folder A (has scripts)",
+      "description": "This folder has a pre-request and a post-response script.",
+      "item": [
+        {
+          "name": "A1 request with scripts",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('request pre-request', '->', pm.info.requestName);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('request post-response', '->', pm.info.requestName);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Has its own scripts too."
+          },
+          "response": []
+        },
+        {
+          "name": "A2 request without scripts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "No scripts of its own: only the collection and folder scripts run."
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "console.log('folder A pre-request', '->', pm.info.requestName);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "console.log('folder A post-response', '->', pm.info.requestName);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Folder B (no scripts)",
+      "description": "This folder has no scripts.",
+      "item": [
+        {
+          "name": "B1 request with scripts",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('request pre-request', '->', pm.info.requestName);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('request post-response', '->', pm.info.requestName);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Has its own scripts."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "console.log('collection pre-request', '->', pm.info.requestName);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "console.log('collection post-response', '->', pm.info.requestName);"
+        ]
+      }
+    }
+  ]
+}

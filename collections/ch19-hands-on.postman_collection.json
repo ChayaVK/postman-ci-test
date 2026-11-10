@@ -1,0 +1,46 @@
+{
+  "info": {
+    "name": "Ch 19 Chaining Requests (hands-on)",
+    "description": "Every request you send in Chapter 19, in the order of the chapter. Select the environment \"Practice API - Local\" first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 POST /api/users",
+      "item": [
+        {
+          "name": "POST /api/users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Chain Test User\",\"email\":\"chain.1@example.com\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

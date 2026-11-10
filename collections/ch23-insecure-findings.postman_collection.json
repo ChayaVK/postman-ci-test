@@ -1,0 +1,660 @@
+{
+  "info": {
+    "_postman_id": "b0f04261-98d3-5443-a6e8-cc775426b846",
+    "name": "Ch 23 - Insecure Endpoint Findings (fails on purpose)",
+    "description": "Chapter 23. Folder 1 runs tests that describe SECURE behavior against the deliberately insecure /api/insecure/* endpoints, so they FAIL ON PURPOSE: each failure is one finding. Folder 2 runs the same expectations against the normal endpoints, and they pass. Expected result: 6 of 13 assertions fail, all in folder 1. Only test systems you own or have written permission to test. A full run takes about 25 seconds (two expired-token checks wait 11 seconds each).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 Insecure endpoints (fail on purpose)",
+      "description": "Each test describes the SECURE behavior, so it fails on the deliberately insecure /api/insecure/* endpoints. Each failure is one finding.",
+      "item": [
+        {
+          "name": "Log in as tester",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login works (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BOLA: read buyer2's order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected (secure) behavior: another user's order is NOT returned",
+                  "pm.test(\"API1 BOLA: tester must not read buyer2's order\", function () {",
+                  "  pm.expect(pm.response.code, 'status').to.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insecure/orders/1002",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insecure",
+                "orders",
+                "1002"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mass assignment: register as admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('newUser', `qa.mass.${Date.now()}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: the server sets role itself and ignores the client's \"role\"",
+                  "pm.test('API3 Mass assignment: new account must get role user', function () {",
+                  "  pm.expect(pm.response.json().role).to.eql('user');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/insecure/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insecure",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{newUser}}\",\n  \"password\": \"Pass@1234\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Log in with the new account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: a self-registered account never gets admin rights",
+                  "const role = pm.response.json().user.role;",
+                  "console.log('the new account logged in with role:', role);",
+                  "",
+                  "pm.test('API3 Impact: the new account must not be admin', function () {",
+                  "  pm.expect(role).to.not.eql('admin');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{newUser}}\",\n  \"password\": \"Pass@1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Broken token check: expired token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Get a token that lives 10 seconds, then wait 11 seconds",
+                  "// (skipped when an expired token is already stored)",
+                  "if (!pm.collectionVariables.get('shortToken')) {",
+                  "  pm.sendRequest({",
+                  "    url: pm.variables.replaceIn('{{baseUrl}}/api/auth/login'),",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({",
+                  "      username: pm.variables.get('username'),",
+                  "      password: pm.variables.get('password'),",
+                  "      expiresIn: 10 }) }",
+                  "  }, function (err, res) {",
+                  "    pm.collectionVariables.set('shortToken', res.json().token);",
+                  "    setTimeout(function () {}, 11000);",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: an expired token is refused with 401 TOKEN_EXPIRED",
+                  "pm.test('API2 Broken auth: expired token must be refused', function () {",
+                  "  pm.expect(pm.response.code, 'status').to.eql(401);",
+                  "  pm.expect(pm.response.json().error.code).to.eql('TOKEN_EXPIRED');",
+                  "});",
+                  "pm.collectionVariables.unset('shortToken');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insecure/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insecure",
+                "profile"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{shortToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Data exposure: search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: a search result never contains password data",
+                  "pm.test('API3 Data exposure: no password data in search results', function () {",
+                  "  pm.expect(pm.response.text()).to.not.match(/password/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insecure/search?q=t",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insecure",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "t"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verbose error: a quote in the search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: odd input gets a normal answer, never HOW the server works",
+                  "pm.test('API8 Verbose error: no SQL or stack trace in the answer', function () {",
+                  "  pm.expect(pm.response.code, 'status').to.be.below(500);",
+                  "  pm.expect(pm.response.text()).to.not.match(/SELECT|stack|Exception/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insecure/search?q='",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insecure",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "'"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2 Same checks on the secure endpoints (pass)",
+      "description": "The same expectations against the normal endpoints of the practice API. Every test passes: this is what \"fixed\" looks like.",
+      "item": [
+        {
+          "name": "Log in as tester",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login works (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BOLA: read buyer2's order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected (secure) behavior: another user's order is NOT returned",
+                  "pm.test(\"API1 BOLA: tester must not read buyer2's order\", function () {",
+                  "  pm.expect(pm.response.code, 'status').to.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1002",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "1002"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mass assignment: create a user as admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: a client can never choose the role \"admin\"",
+                  "pm.test('API3 Mass assignment: \"role\": \"admin\" is not accepted', function () {",
+                  "  pm.expect(pm.response.code, 'status').to.eql(400);",
+                  "  pm.expect(pm.response.json().error.details[0].field).to.eql('role');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Role Check\",\n  \"email\": \"role.check@example.com\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Broken token check: expired token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Get a token that lives 10 seconds, then wait 11 seconds",
+                  "// (skipped when an expired token is already stored)",
+                  "if (!pm.collectionVariables.get('shortToken')) {",
+                  "  pm.sendRequest({",
+                  "    url: pm.variables.replaceIn('{{baseUrl}}/api/auth/login'),",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({",
+                  "      username: pm.variables.get('username'),",
+                  "      password: pm.variables.get('password'),",
+                  "      expiresIn: 10 }) }",
+                  "  }, function (err, res) {",
+                  "    pm.collectionVariables.set('shortToken', res.json().token);",
+                  "    setTimeout(function () {}, 11000);",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: an expired token is refused with 401 TOKEN_EXPIRED",
+                  "pm.test('API2 Broken auth: expired token must be refused', function () {",
+                  "  pm.expect(pm.response.code, 'status').to.eql(401);",
+                  "  pm.expect(pm.response.json().error.code).to.eql('TOKEN_EXPIRED');",
+                  "});",
+                  "pm.collectionVariables.unset('shortToken');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{shortToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Data exposure: search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: a search result never contains password data",
+                  "pm.test('API3 Data exposure: no password data in search results', function () {",
+                  "  pm.expect(pm.response.text()).to.not.match(/password/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?search=t",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "t"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verbose error: a quote in the search",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Expected: odd input gets a normal answer, never HOW the server works",
+                  "pm.test('API8 Verbose error: no SQL or stack trace in the answer', function () {",
+                  "  pm.expect(pm.response.code, 'status').to.be.below(500);",
+                  "  pm.expect(pm.response.text()).to.not.match(/SELECT|stack|Exception/i);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?search='",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "'"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": []
+}

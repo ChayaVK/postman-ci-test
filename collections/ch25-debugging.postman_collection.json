@@ -1,0 +1,449 @@
+{
+  "info": {
+    "_postman_id": "380e2e12-a936-54e5-9a78-b82991b91f53",
+    "name": "Ch25 Debugging: Common API Errors",
+    "description": "Chapter 25 of *API Testing with Postman: The Complete Course*.\n\nEach request in **1 Reproduce common errors** is wrong on purpose. Its tests check the exact status and error code the practice API returns, so you can see what each mistake looks like. **2 Timeouts** calls a slow endpoint (use it with a request timeout).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 Is the server up?",
+      "description": "Always the first check when nothing works.",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Server reports UP', () => {",
+                  "  pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 Reproduce common errors",
+      "description": "Every request here is wrong on purpose.",
+      "item": [
+        {
+          "name": "404 - typo in the path (/api/user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error code is NOT_FOUND', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('NOT_FOUND');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            },
+            "description": "The path should be /api/users."
+          }
+        },
+        {
+          "name": "404 - record does not exist (user 999)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('Error code is USER_NOT_FOUND', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('USER_NOT_FOUND');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "999"
+              ]
+            },
+            "description": "The path is right; the record is missing."
+          }
+        },
+        {
+          "name": "405 - wrong method (PATCH a product)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 405', () => pm.response.to.have.status(405));",
+                  "pm.test('Error code is METHOD_NOT_ALLOWED', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('METHOD_NOT_ALLOWED');",
+                  "});",
+                  "console.log(pm.response.json().error.message);",
+                  "",
+                  "pm.test('Allow header lists the methods that do work', () => {",
+                  "  pm.expect(pm.response.headers.get('Allow')).to.eql('GET, DELETE, HEAD, OPTIONS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
+            },
+            "description": "Products can be read and deleted, not patched.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "415 - body sent as Text, not JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 415', () => pm.response.to.have.status(415));",
+                  "pm.test('Error code is UNSUPPORTED_MEDIA_TYPE', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('UNSUPPORTED_MEDIA_TYPE');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Body type raw **Text** sends Content-Type: text/plain.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Khan\",\n  \"email\": \"sara@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 - invalid JSON (trailing comma)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error code is INVALID_JSON', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('INVALID_JSON');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "The comma after the last field makes the JSON invalid.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Khan\",\n  \"email\": \"sara@example.com\",\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "401 - no token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is UNAUTHORIZED', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('UNAUTHORIZED');",
+                  "});",
+                  "console.log(pm.response.json().error.message);",
+                  "",
+                  "pm.test('WWW-Authenticate says a Bearer token is expected', () => {",
+                  "  pm.expect(pm.response.headers.get('WWW-Authenticate')).to.include('Bearer');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "No Authorization header at all.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "401 - token is not a JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('Error code is INVALID_TOKEN', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('INVALID_TOKEN');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "A pasted value that is not a JWT.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "abc123",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "413 - body larger than 1 MB",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Build a text of 1.1 MB. The practice API accepts bodies up to 1 MB.",
+                  "pm.variables.set('bigNote', 'x'.repeat(1.1 * 1024 * 1024));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 413', () => pm.response.to.have.status(413));",
+                  "pm.test('Error code is PAYLOAD_TOO_LARGE', () => {",
+                  "  pm.expect(pm.response.json().error.code).to.eql('PAYLOAD_TOO_LARGE');",
+                  "});",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/echo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "echo"
+              ]
+            },
+            "description": "The pre-request script builds a 1.1 MB value.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"{{bigNote}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 Timeouts",
+      "description": "Run with a request timeout (Newman: --timeout-request 1000) to see a timeout.",
+      "item": [
+        {
+          "name": "Slow endpoint (waits 3 s)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('The server really waited about 3 s', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.above(2900);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/slow?ms=3000",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "slow"
+              ],
+              "query": [
+                {
+                  "key": "ms",
+                  "value": "3000"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

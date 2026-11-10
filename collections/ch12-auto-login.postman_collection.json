@@ -1,0 +1,166 @@
+{
+	"info": {
+		"_postman_id": "ddfc745f-0735-54b6-9f50-75973008868d",
+		"name": "Ch 12 - Log In Once (auto token)",
+		"description": "# Log in once, reuse the token\n\nThe collection uses **Bearer Token** `{{token}}`, and every request inherits it. The collection pre-request script logs in only when `token` is missing or about to expire, and stores the new token and its expiry time in collection variables.\n\nBefore you send: start the practice API (`node server.js` in the practice-api folder) and select the environment **Practice API - Local** in the environment selector at the top right.\n\nTo watch it renew the token, set the collection variable `tokenLifetime` to `10` (seconds).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Who am I",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/me",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"me"
+					]
+				},
+				"description": "Inherits the Bearer token from the collection."
+			},
+			"response": []
+		},
+		{
+			"name": "My orders",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/orders",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"orders"
+					]
+				},
+				"description": "Inherits the Bearer token from the collection."
+			},
+			"response": []
+		},
+		{
+			"name": "Place an order",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/orders",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"orders"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"productId\": 4,\n  \"quantity\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"description": "Orders one Notebook A5 (product 4)."
+			},
+			"response": []
+		},
+		{
+			"name": "Who am I (again)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/me",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"me"
+					]
+				},
+				"description": "Same token, unless it expired."
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Collection pre-request script: runs before EVERY request in this collection.",
+					"const token = pm.collectionVariables.get('token');",
+					"const expiresAt = Number(pm.collectionVariables.get('tokenExpiresAt')) || 0;",
+					"// Valid = we have a token and it has more than 5 seconds left.",
+					"const stillValid = Boolean(token) && Date.now() < expiresAt - 5000;",
+					"",
+					"if (stillValid) {",
+					"    console.log('Token still valid: no login needed');",
+					"} else {",
+					"    console.log('No valid token: logging in');",
+					"    pm.sendRequest({",
+					"        url: pm.variables.get('baseUrl') + '/api/auth/login',",
+					"        method: 'POST',",
+					"        header: { 'Content-Type': 'application/json' },",
+					"        body: {",
+					"            mode: 'raw',",
+					"            raw: JSON.stringify({",
+					"                username: pm.variables.get('username'),",
+					"                password: pm.variables.get('password'),",
+					"                expiresIn: Number(pm.variables.get('tokenLifetime'))",
+					"            })",
+					"        }",
+					"    }, (err, res) => {",
+					"        if (err || res.code !== 200) {",
+					"            console.error('Login failed:', err ? err.message : res.code);",
+					"            return;",
+					"        }",
+					"        const body = res.json();",
+					"        pm.collectionVariables.set('token', body.token);",
+					"        pm.collectionVariables.set('tokenExpiresAt', Date.now() + body.expiresIn * 1000);",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenExpiresAt",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenLifetime",
+			"value": "3600",
+			"type": "string"
+		}
+	]
+}

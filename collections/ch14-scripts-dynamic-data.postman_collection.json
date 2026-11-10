@@ -1,0 +1,719 @@
+{
+  "info": {
+    "_postman_id": "9053cdd7-74b3-5fdf-b40d-77c6f6ed127d",
+    "name": "Ch 14 - Scripts and Dynamic Data",
+    "description": "Pre-request and post-response scripts, the pm object, variables from scripts, dynamic variables, unique test data, pm.sendRequest and a shared script library (the collection pre-request script defines `utils`).\n\nRun the folders in order (the requests in folders 02 and 05 depend on each other). Needs the practice API and the environment \"Practice API - Local\". Start from fresh data: restart the API or POST /api/reset.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 The pm object",
+      "description": "What a script can see about the request, the response and the run.",
+      "item": [
+        {
+          "name": "Tour of pm",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('request name :', pm.info.requestName);",
+                  "console.log('iteration    :', pm.info.iteration);",
+                  "console.log('method + URL :', pm.request.method, pm.request.url.toString());",
+                  "console.log('sent header  :', pm.request.headers.get('X-Request-Id'));",
+                  "console.log('status       :', pm.response.code, pm.response.status);",
+                  "console.log('content type :', pm.response.headers.get('Content-Type'));",
+                  "console.log('time (ms)    :', pm.response.responseTime);",
+                  "console.log('body.name    :', pm.response.json().name);",
+                  "console.log('environment  :', pm.environment.name);",
+                  "console.log('baseUrl      :', pm.environment.get('baseUrl'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Request-Id",
+                "value": "ch14-tour"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "2"
+              ]
+            },
+            "description": "Prints the most useful parts of the pm object."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Variables from scripts",
+      "description": "Saving a value from one response and using it in the next request.",
+      "item": [
+        {
+          "name": "Create a user and save its id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const user = pm.response.json();",
+                  "pm.collectionVariables.set('userId', user.id);",
+                  "console.log('saved userId =', pm.collectionVariables.get('userId'));",
+                  "console.log('type now     :', typeof pm.collectionVariables.get('userId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Creates a user and stores its id in a collection variable.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Variable Demo\",\n  \"email\": \"{{$randomEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Read the saved user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log(pm.request.url.toString(), '->', pm.response.code);",
+                  "console.log(pm.response.json().name);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Uses {{userId}} from the previous request."
+          },
+          "response": []
+        },
+        {
+          "name": "Same name, different scopes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('who', 'collection');",
+                  "pm.environment.set('who', 'environment');",
+                  "console.log(pm.variables.get('who'));      // environment beats collection",
+                  "",
+                  "pm.variables.set('who', 'local');          // local: only for this request",
+                  "console.log(pm.variables.get('who'));      // local beats both",
+                  "",
+                  "pm.environment.unset('who');               // clean up",
+                  "pm.collectionVariables.unset('who');",
+                  "console.log(pm.environment.get('who'), pm.collectionVariables.get('who'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Shows which value pm.variables.get() picks when one name exists in several scopes."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 Dynamic variables",
+      "description": "Built-in {{$...}} variables that make a fresh value every time.",
+      "item": [
+        {
+          "name": "Dynamic variables in a body",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log(pm.response.json().body);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/echo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "echo"
+              ]
+            },
+            "description": "The echo endpoint shows exactly what Postman put in the body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guid\": \"{{$guid}}\",\n  \"timestamp\": \"{{$timestamp}}\",\n  \"isoTimestamp\": \"{{$isoTimestamp}}\",\n  \"randomInt\": \"{{$randomInt}}\",\n  \"randomInt2\": \"{{$randomInt}}\",\n  \"email\": \"{{$randomEmail}}\",\n  \"fullName\": \"{{$randomFullName}}\",\n  \"alphaNum\": \"{{$randomAlphaNumeric}}\",\n  \"bool\": {{$randomBoolean}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dynamic variables in a script",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const email = pm.variables.replaceIn('{{$randomEmail}}');",
+                  "const id = pm.variables.replaceIn('{{$guid}}');",
+                  "console.log(email);",
+                  "console.log(id, id.length);",
+                  "console.log(pm.variables.replaceIn('Order-{{$randomInt}}-{{$timestamp}}'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "pm.variables.replaceIn() resolves {{$...}} inside a script."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 Unique test data",
+      "description": "Why fixed data breaks on the second run, and how to make each run unique.",
+      "item": [
+        {
+          "name": "Fixed email: first time",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "utils.logResult(pm.response);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Works once.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fixed Email\",\n  \"email\": \"fixed.email@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fixed email: second time (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "utils.logResult(pm.response);",
+                  "console.log(pm.response.json().error.message);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "Same body again: the email is taken now.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Fixed Email\",\n  \"email\": \"fixed.email@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unique email every run",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const stamp = Date.now();                          // milliseconds since 1970",
+                  "const rand = Math.floor(Math.random() * 1000);     // 0 to 999",
+                  "pm.variables.set('testEmail', `qa.${stamp}.${rand}@example.com`);",
+                  "pm.variables.set('testName', `QA User ${rand}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "utils.logResult(pm.response);",
+                  "const user = pm.response.json();",
+                  "console.log(user.id, user.name, user.email);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "The pre-request script makes a new email and name each time.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{testName}}\",\n  \"email\": \"{{testEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 pm.sendRequest",
+      "description": "Sending extra requests from inside a script.",
+      "item": [
+        {
+          "name": "Log in from a script when needed",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('token')) {",
+                  "  console.log('token already there, no login needed');",
+                  "} else {",
+                  "  pm.sendRequest({",
+                  "    url: pm.environment.get('baseUrl') + '/api/auth/login',",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: {",
+                  "      mode: 'raw',",
+                  "      raw: JSON.stringify({",
+                  "        username: pm.environment.get('username'),",
+                  "        password: pm.environment.get('password')",
+                  "      })",
+                  "    }",
+                  "  }, (err, res) => {",
+                  "    if (err) { console.log('login failed:', err.message); return; }",
+                  "    console.log('login status', res.code);",
+                  "    pm.collectionVariables.set('token', res.json().token);",
+                  "  });",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log(pm.response.code, pm.response.json().username);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Pre-request: logs in only if there is no token yet, then the request uses {{token}}.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Second call reuses the token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('token')) {",
+                  "  console.log('token already there, no login needed');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log(pm.response.code, pm.response.json().role);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Same pre-request logic, but the token is already saved.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Order and check the stock",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const dbUrl = pm.environment.get('baseUrl') + '/debug/db?table=products';",
+                  "pm.sendRequest(dbUrl, (err, res) => {",
+                  "  const mouse = res.json().rows.find(p => p.id === 1);",
+                  "  pm.variables.set('stockBefore', mouse.stock);",
+                  "  console.log('stock before:', mouse.stock);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const order = pm.response.json();",
+                  "console.log('order', order.id, order.status, 'quantity', order.quantity);",
+                  "",
+                  "const dbUrl = pm.environment.get('baseUrl') + '/debug/db?table=products';",
+                  "pm.sendRequest(dbUrl, (err, res) => {",
+                  "  const mouse = res.json().rows.find(p => p.id === 1);",
+                  "  const before = pm.variables.get('stockBefore');",
+                  "  console.log('stock after :', mouse.stock);",
+                  "  console.log('went down by', before - mouse.stock);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Reads the stock before (pre-request) and after (post-response) placing the order.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 Script library",
+      "description": "Reusing helpers that the collection pre-request script defines.",
+      "item": [
+        {
+          "name": "Use the shared helpers",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('libName', utils.uniqueName('Library User'));",
+                  "pm.variables.set('libEmail', utils.uniqueEmail('lib'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "utils.logResult(pm.response);",
+                  "console.log(pm.response.json().email);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "description": "utils.uniqueName() and utils.uniqueEmail() come from the collection script.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{libName}}\",\n  \"email\": \"{{libEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Shared helpers for every request in this collection (Chapter 14).",
+          "// Declared WITHOUT const/let/var on purpose, so request scripts can see it.",
+          "utils = {",
+          "  uniqueEmail(prefix = 'qa') {",
+          "    const rand = Math.floor(Math.random() * 1e6);",
+          "    return `${prefix}.${Date.now()}.${rand}@example.com`;",
+          "  },",
+          "  uniqueName(prefix = 'QA User') {",
+          "    return `${prefix} ${Date.now().toString().slice(-6)}`;",
+          "  },",
+          "  logResult(response) {             // pass pm.response in (see the note)",
+          "    console.log(`${response.code} ${response.status}`);",
+          "  }",
+          "};"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

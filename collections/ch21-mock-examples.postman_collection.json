@@ -1,0 +1,192 @@
+{
+  "info": {
+    "_postman_id": "ce38dd8b-a223-52c3-9d84-244ef09959de",
+    "name": "Ch 21 - Mock Examples",
+    "description": "Chapter 21, section *Mock servers*. Each request has a saved example. Create a Postman mock server from this collection, put the mock URL in an environment as baseUrl, and the requests get the saved examples back. Against the practice API, the two user requests pass their tests and the planned loyalty endpoint answers 404 (it is not built yet).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get user 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200 and the body is user 1', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().id).to.eql(1);",
+              "  pm.expect(pm.response.json().name).to.eql('Asha Rao');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "1"
+          ]
+        },
+        "description": "Has a saved example \"User found\" (a real response)."
+      },
+      "response": [
+        {
+          "name": "User found",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"id\": 1,\n  \"name\": \"Asha Rao\",\n  \"email\": \"asha@example.com\",\n  \"role\": \"tester\",\n  \"active\": true,\n  \"createdAt\": \"2026-01-05T09:00:00.000Z\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get user 999",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 404 with code USER_NOT_FOUND', function () {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json().error.code).to.eql('USER_NOT_FOUND');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "999"
+          ]
+        },
+        "description": "Has a saved example \"User not found\" (a real 404 response)."
+      },
+      "response": [
+        {
+          "name": "User not found",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "999"
+              ]
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"error\": {\n    \"code\": \"USER_NOT_FOUND\",\n    \"message\": \"No user with id 999.\"\n  },\n  \"requestId\": \"a097771a-831e-4f3a-926e-0f61aee9fd83\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get loyalty points (planned)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/1/loyalty",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "1",
+            "loyalty"
+          ]
+        },
+        "description": "PLANNED endpoint: not built in the practice API yet (it answers 404). The saved example \"Loyalty points\" is the agreed response, so a mock server can return it today."
+      },
+      "response": [
+        {
+          "name": "Loyalty points",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1/loyalty",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1",
+                "loyalty"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"userId\": 1,\n  \"points\": 120,\n  \"tier\": \"SILVER\",\n  \"updatedAt\": \"2026-11-01T10:00:00.000Z\"\n}"
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

@@ -1,0 +1,281 @@
+{
+	"info": {
+		"_postman_id": "c9e5aba3-fa6f-5602-babc-574c64d96725",
+		"name": "Ch 10 - Practice API Collection",
+		"description": "# Practice API: sample collection\n\nA small, well-organized collection for the QAMadeEasy practice API. Use it as a model for your own collections.\n\n## Before you run\n1. Start the practice API: `node server.js` (base URL http://localhost:3000).\n2. Select the environment **Practice API - Local**.\n\n## How it is organized\n| Folder | What it covers | Auth |\n|---|---|---|\n| Users | Read users | none |\n| Products | Read products | none |\n| Reports | Sales report | API key, set once on the folder |\n\n## Variables\n- `baseUrl` comes from the environment.\n- `userId` and `productId` are collection variables (Variables tab).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"description": "Read-only user requests. No login needed.",
+			"item": [
+				{
+					"name": "List users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users?limit=3",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "3"
+								}
+							]
+						},
+						"description": "First page, three users per page."
+					},
+					"response": []
+				},
+				{
+					"name": "Get one user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						},
+						"description": "Reads the user whose id is in the collection variable `userId`.\n\n**Expected:** `200 OK` with the user. An unknown id gives `404` (see the saved examples)."
+					},
+					"response": [
+						{
+							"name": "User found",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{baseUrl}}/api/users/2",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"users",
+										"2"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Request-Id",
+									"value": "4baddf8c-0cfd-4a86-9f94-16f7ecab7c82"
+								},
+								{
+									"key": "ETag",
+									"value": "\"87ff18f0cccd19bc\""
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"id\": 2,\n  \"name\": \"Ravi Kumar\",\n  \"email\": \"ravi@example.com\",\n  \"role\": \"developer\",\n  \"active\": true,\n  \"createdAt\": \"2026-01-12T10:30:00.000Z\"\n}"
+						},
+						{
+							"name": "User not found",
+							"originalRequest": {
+								"method": "GET",
+								"url": {
+									"raw": "{{baseUrl}}/api/users/999",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"users",
+										"999"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "X-Request-Id",
+									"value": "fddef899-fefd-43a6-b15d-8ab295df96dc"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"error\": {\n    \"code\": \"USER_NOT_FOUND\",\n    \"message\": \"No user with id 999.\"\n  },\n  \"requestId\": \"fddef899-fefd-43a6-b15d-8ab295df96dc\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"description": "Product catalog. No login needed.",
+			"item": [
+				{
+					"name": "List electronics in stock",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products?category=electronics&inStock=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "electronics"
+								},
+								{
+									"key": "inStock",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Only products with stock above 0."
+					},
+					"response": []
+				},
+				{
+					"name": "Get one product",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Reads the product whose id is in `productId`."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"description": "The sales report needs an API key. The key is set once, on this folder (Authorization tab: API Key, `x-api-key`, `{{apiKey}}`), and every request in the folder inherits it.",
+			"item": [
+				{
+					"name": "Sales report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/sales",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"sales"
+							]
+						},
+						"description": "Inherits the API key from the folder."
+					},
+					"response": []
+				},
+				{
+					"name": "Sales report without the key (401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/sales",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"sales"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						},
+						"description": "This request overrides the folder with **No Auth**, so the API answers `401`."
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{
+						"key": "key",
+						"value": "x-api-key",
+						"type": "string"
+					},
+					{
+						"key": "value",
+						"value": "{{apiKey}}",
+						"type": "string"
+					},
+					{
+						"key": "in",
+						"value": "header",
+						"type": "string"
+					}
+				]
+			}
+		}
+	],
+	"auth": {
+		"type": "noauth"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Collection script: runs before EVERY request in this collection.",
+					"console.log('Sending: ' + pm.info.requestName);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "userId",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "2",
+			"type": "string"
+		}
+	]
+}

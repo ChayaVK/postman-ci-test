@@ -1,0 +1,366 @@
+{
+  "info": {
+    "_postman_id": "97fe4ebe-cd77-50c1-9803-a3a7384d172c",
+    "name": "Ch 01 - One Order Across Five APIs",
+    "description": "One online order traced across five APIs of the practice shop: log in, look up the product, place the order, pay for it, and check that the notification arrived. Run the whole collection with the Collection Runner (Chapter 26). Each request saves what the next one needs (Chapter 19).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 Setup",
+      "description": "Starts from clean data and subscribes the built-in notification receiver.",
+      "item": [
+        {
+          "name": "Reset all data",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reset"
+              ]
+            },
+            "description": "Clean starting data."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subscribe the notification receiver",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "webhooks"
+              ]
+            },
+            "description": "Asks the shop to send an order.created event to /webhook-inbox whenever an order is placed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"{{baseUrl}}/webhook-inbox\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1-5 The order",
+      "description": "The five API calls behind one purchase.",
+      "item": [
+        {
+          "name": "1 Auth API - log in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "The customer logs in and gets a token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Got a token', () => pm.expect(pm.response.json().token).to.be.a('string'));",
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2 Catalog API - product and stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "2"
+              ]
+            },
+            "description": "Price and stock of the keyboard."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json();",
+                  "pm.test('In stock', () => pm.expect(p.stock).to.be.above(0));",
+                  "pm.collectionVariables.set('stockBefore', p.stock);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3 Order API - place the order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "description": "Needs the token from step 1.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 2,\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const o = pm.response.json();",
+                  "pm.test('Order is PLACED', () => pm.expect(o.status).to.eql('PLACED'));",
+                  "pm.collectionVariables.set('orderId', o.id);",
+                  "pm.collectionVariables.set('total', o.total);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4 Payment API - pay",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            },
+            "description": "Pays the order total. The Idempotency-Key makes a retried payment safe (Chapter 22).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": {{orderId}},\n  \"amount\": {{total}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Payment CAPTURED', () => pm.expect(pm.response.json().status).to.eql('CAPTURED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5 Notification - event received",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook-inbox",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webhook-inbox"
+              ]
+            },
+            "description": "The shop sent an order.created event for our order to the notification receiver."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const e = pm.response.json().data.find(x => x.body.data.id === pm.collectionVariables.get('orderId'));",
+                  "pm.test('order.created event arrived', () => pm.expect(e.event).to.eql('order.created'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Verify",
+      "description": "Check the side effect in the data store.",
+      "item": [
+        {
+          "name": "Stock went down by 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "2"
+              ]
+            },
+            "description": "The order took one keyboard out of stock."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Stock is 1 lower', () => pm.expect(pm.response.json().stock)",
+                  "  .to.eql(pm.collectionVariables.get('stockBefore') - 1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "stockBefore",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "total",
+      "value": ""
+    }
+  ]
+}

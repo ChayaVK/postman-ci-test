@@ -1,0 +1,212 @@
+{
+	"info": {
+		"_postman_id": "3a725cdf-e049-5750-b4c4-7a6be524bad6",
+		"name": "Ch 11 - Variables and Environments",
+		"description": "# Chapter 11: variables and environments\n\nBefore you send: start the practice API (`node server.js` in the practice-api folder) and select the environment **Practice API - Local** in the environment selector at the top right.\n\nThe collection variable `who` has the value `collection`. Define `who` in other scopes and send **Which scope wins?** again to see precedence in action.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Where am I? (echo host)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/echo",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"echo"
+					]
+				},
+				"description": "The `host` header in the response shows which server `{{baseUrl}}` pointed to."
+			},
+			"response": []
+		},
+		{
+			"name": "Which scope wins?",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/echo?who={{who}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"echo"
+					],
+					"query": [
+						{
+							"key": "who",
+							"value": "{{who}}"
+						}
+					]
+				},
+				"description": "The response shows `query.who`: the value Postman resolved for `{{who}}`."
+			},
+			"response": []
+		},
+		{
+			"name": "Which scope wins? (with a local variable)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// A local variable lives only while this request runs.",
+							"pm.variables.set('who', 'local');"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/echo?who={{who}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"echo"
+					],
+					"query": [
+						{
+							"key": "who",
+							"value": "{{who}}"
+						}
+					]
+				},
+				"description": "The pre-request script sets a local variable `who`, which beats every other scope."
+			},
+			"response": []
+		},
+		{
+			"name": "Log in with environment variables",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"description": "`{{username}}` and `{{password}}` come from the environment."
+			},
+			"response": []
+		},
+		{
+			"name": "Mistakes on purpose",
+			"description": "Each request shows one common variable mistake.",
+			"item": [
+				{
+					"name": "Boolean in quotes (400)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Quote Test\",\n  \"email\": \"quote.test@example.com\",\n  \"active\": \"{{isActive}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "`\"{{isActive}}\"` becomes the string `\"false\"`, not the boolean `false`."
+					},
+					"response": []
+				},
+				{
+					"name": "Boolean without quotes (201)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Bool Test\",\n  \"email\": \"bool.test@example.com\",\n  \"active\": {{isActive}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "`{{isActive}}` without quotes becomes the JSON boolean `false`."
+					},
+					"response": []
+				},
+				{
+					"name": "Wrong case in the variable name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/health",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "`{{baseURL}}` is not `{{baseUrl}}`: variable names are case-sensitive, so the request fails."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "who",
+			"value": "collection",
+			"type": "string"
+		},
+		{
+			"key": "isActive",
+			"value": "false",
+			"type": "string"
+		}
+	]
+}

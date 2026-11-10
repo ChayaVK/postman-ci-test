@@ -1,0 +1,251 @@
+{
+  "info": {
+    "_postman_id": "48af9fcb-fb6b-58fb-aabb-4245bf577be1",
+    "name": "Ch 18 - Test Mistakes (fails on purpose)",
+    "description": "Chapter 18, section *Common mistakes*. This collection FAILS ON PURPOSE: it shows tests that pass when they should fail (BAD) next to correct versions (FIXED). Expected result: 7 of 15 assertions fail. The book lists each one.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Wrong id: bad tests stay green",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// The URL has a typo (99 instead of 1). These four tests still PASS.",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('BAD: name is Asha Rao (no matcher)', function () {",
+              "  pm.expect(json.name === 'Asha Rao');          // never checked",
+              "});",
+              "",
+              "pm.test('BAD: email is right (checked too late)', function () {",
+              "  setTimeout(function () {                      // runs after the test ended",
+              "    pm.expect(json.email).to.eql('asha@example.com');",
+              "  }, 0);",
+              "});",
+              "",
+              "pm.test('BAD: every role is valid (empty loop)', function () {",
+              "  (json.data || []).forEach(function (u) {      // json.data is undefined",
+              "    pm.expect(u.role).to.be.oneOf(['tester', 'developer', 'manager']);",
+              "  });",
+              "});",
+              "",
+              "if (json.id) {                                  // false, so no test at all",
+              "  pm.test('BAD: id is 1 (inside an if)', function () {",
+              "    pm.expect(json.id).to.eql(1);",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/99",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "99"
+          ]
+        },
+        "description": "The URL should be /api/users/1. The response is a 404, yet every BAD test passes."
+      },
+      "response": []
+    },
+    {
+      "name": "Wrong id: fixed tests catch it",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// The same checks written correctly. These FAIL, as they should.",
+              "const json = pm.response.json();",
+              "",
+              "pm.test('FIXED: status is 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('FIXED: name is Asha Rao', function () {",
+              "  pm.expect(json.name).to.eql('Asha Rao');",
+              "});",
+              "",
+              "pm.test('FIXED: the body has id 1', function () {",
+              "  pm.expect(json).to.have.property('id', 1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/99",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "99"
+          ]
+        },
+        "description": "The same wrong URL. The FIXED tests fail, which is what a test should do here."
+      },
+      "response": []
+    },
+    {
+      "name": "Wrong JSON paths",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();   // { data: [ {...}, {...} ], page, ... }",
+              "",
+              "pm.test('BAD: first name is not empty (wrong path, passes)', function () {",
+              "  pm.expect(json.data.name).to.not.eql('');     // data is an array",
+              "});",
+              "",
+              "pm.test('BAD: list has 2 users (wrong path, crashes)', function () {",
+              "  pm.expect(json.users.length).to.eql(2);       // there is no \"users\"",
+              "});",
+              "",
+              "pm.test('FIXED: first name is Asha Rao', function () {",
+              "  pm.expect(json.data[0].name).to.eql('Asha Rao');",
+              "});",
+              "",
+              "pm.test('FIXED: list has 2 users', function () {",
+              "  pm.expect(json.data).to.have.lengthOf(2);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users?limit=2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "2"
+            }
+          ]
+        },
+        "description": "A correct response, tested with wrong and right paths."
+      },
+      "response": []
+    },
+    {
+      "name": "Strings vs numbers",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "",
+              "pm.test('BAD: id is \"1\" (a string)', function () {",
+              "  pm.expect(json.id).to.eql('1');               // the API sends the number 1",
+              "});",
+              "",
+              "pm.test('BAD: pm.response.status is 200', function () {",
+              "  pm.expect(pm.response.status).to.eql(200);    // status is the text \"OK\"",
+              "});",
+              "",
+              "pm.test('FIXED: id is the number 1', function () {",
+              "  pm.expect(json.id).to.eql(1);",
+              "});",
+              "",
+              "pm.test('FIXED: status code is 200', function () {",
+              "  pm.expect(pm.response.code).to.eql(200);      // or to.have.status(200)",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "1"
+          ]
+        },
+        "description": "A correct response, tested with the wrong and the right types."
+      },
+      "response": []
+    },
+    {
+      "name": "What a schema failure looks like",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Old v1 users have fullName and mail. Check the first one against User.",
+              "const userSchema = JSON.parse(pm.collectionVariables.get('userSchema'));",
+              "const first = pm.response.json()[0];",
+              "",
+              "pm.test('v1 user matches the User schema (it does not)', function () {",
+              "  pm.expect(first).to.have.jsonSchema(userSchema);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users"
+          ]
+        },
+        "description": "The old v1 shape (fullName, mail) does not match the User schema."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "userSchema",
+      "value": "{\"type\": \"object\", \"required\": [\"id\", \"name\", \"email\", \"role\", \"active\", \"createdAt\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"name\": {\"type\": \"string\"}, \"email\": {\"type\": \"string\", \"format\": \"email\"}, \"role\": {\"type\": \"string\", \"enum\": [\"tester\", \"developer\", \"manager\"]}, \"active\": {\"type\": \"boolean\"}, \"createdAt\": {\"type\": \"string\", \"format\": \"date-time\"}}}",
+      "type": "string"
+    }
+  ]
+}

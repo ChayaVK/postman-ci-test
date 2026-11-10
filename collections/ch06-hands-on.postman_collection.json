@@ -1,0 +1,691 @@
+{
+  "info": {
+    "name": "Ch 06 REST in Practice (hands-on)",
+    "description": "Every request you send in Chapter 6, in the order of the chapter. Select the environment \"Practice API - Local\" first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 POST /api/users",
+      "item": [
+        {
+          "name": "POST /api/users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Sara Khan\",\"email\":\"sara@example.com\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 GET /api/users/9",
+      "item": [
+        {
+          "name": "GET /api/users/9",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/9"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "PATCH /api/users/9",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/9",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"active\":false}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "PUT /api/users/9",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/9",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Sara Khan\",\"email\":\"sara@example.com\",\"role\":\"tester\",\"active\":true}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "DELETE /api/users/9",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/9"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/users/9 (2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/9"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "DELETE /api/users/9 (2)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/9"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 GET /api/users/99",
+      "item": [
+        {
+          "name": "GET /api/users/99",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/99"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/users?search=zzz",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?search=zzz"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/users/abc",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/abc"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 GET /api/users?page=3&limit=3",
+      "item": [
+        {
+          "name": "GET /api/users?page=3&limit=3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?page=3&limit=3"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 GET /api/users?role=tester&active=true&sort=-createdAt",
+      "item": [
+        {
+          "name": "GET /api/users?role=tester&active=true&sort=-createdAt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?role=tester&active=true&sort=-createdAt"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 GET /api/users?limit=51",
+      "item": [
+        {
+          "name": "GET /api/users?limit=51",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?limit=51"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/users?sort=email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?sort=email"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/users?page=100",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/users?page=100"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 GET /api/v1/users",
+      "item": [
+        {
+          "name": "GET /api/v1/users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v1/users"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 GET /api/v2/users?limit=1",
+      "item": [
+        {
+          "name": "GET /api/v2/users?limit=1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/v2/users?limit=1"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 POST /api/payments",
+      "item": [
+        {
+          "name": "POST /api/payments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"orderId\":1001,\"amount\":1598}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "POST /api/payments (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "7f9c2b1e-order-1001"
+              }
+            ],
+            "url": "{{baseUrl}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"orderId\":1001,\"amount\":1598}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 POST /api/payments",
+      "item": [
+        {
+          "name": "POST /api/payments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "7f9c2b1e-order-1001"
+              }
+            ],
+            "url": "{{baseUrl}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"orderId\":1001,\"amount\":1598}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "POST /api/payments (2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "7f9c2b1e-order-1001"
+              }
+            ],
+            "url": "{{baseUrl}}/api/payments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"orderId\":1001,\"amount\":999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 POST /api/reports",
+      "item": [
+        {
+          "name": "POST /api/reports",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\":\"sales\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('job', pm.response.json().jobId);"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/jobs/{{job}}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{job}}"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/jobs/{{job}} (2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{job}}"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// wait 1.5 s before sending, so the job has moved on",
+                  "setTimeout(() => {}, 1500);"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/jobs/{{job}} (3)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/jobs/{{job}}"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// wait 2 s before sending, so the job has moved on",
+                  "setTimeout(() => {}, 2000);"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 POST /api/files",
+      "item": [
+        {
+          "name": "POST /api/files",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/files",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "files/notes.txt"
+                },
+                {
+                  "key": "description",
+                  "value": "Build 42 notes",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('fid', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/files/{{fid}}",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/files/{{fid}}"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 POST /api/files",
+      "item": [
+        {
+          "name": "POST /api/files",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/files",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "files/diagram.gif"
+                }
+              ]
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "POST /api/files (2)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/files",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "document",
+                  "type": "file",
+                  "src": "files/notes.txt"
+                }
+              ]
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "POST /api/files (3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/files",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"file\":\"notes.txt\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 GET /openapi.json (list operations)",
+      "item": [
+        {
+          "name": "GET /openapi.json (list operations)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/openapi.json"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Print every operation and its documented status codes to the Console",
+                  "const spec = pm.response.json();",
+                  "for (const [path, ops] of Object.entries(spec.paths))",
+                  "  for (const m of Object.keys(ops)) if (m !== 'parameters')",
+                  "    console.log(m.toUpperCase().padEnd(7) + path.padEnd(19) + Object.keys(ops[m].responses).join(' '));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "Ch 24 Microservices and Logs (hands-on)",
+    "description": "Every request you send in Chapter 24, in the order of the chapter. Select the environment \"Practice API - Local\" first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 GET /api/users/1",
+      "item": [
+        {
+          "name": "GET /api/users/1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Request-Id",
+                "value": "qa-demo-001"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/1"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/logs?requestId=qa-demo-001",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/logs?requestId=qa-demo-001"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 POST /api/orders",
+      "item": [
+        {
+          "name": "Log in as tester",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\": \"tester\", \"password\": \"Test@123\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('token', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"productId\":3,\"quantity\":1}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// keep this request's id for the log search",
+                  "pm.collectionVariables.set('requestId', pm.response.headers.get('X-Request-Id'));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 GET /api/logs for the failed request",
+      "item": [
+        {
+          "name": "GET /api/logs for the failed request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/logs?requestId={{requestId}}"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

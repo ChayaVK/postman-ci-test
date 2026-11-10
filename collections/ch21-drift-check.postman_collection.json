@@ -1,0 +1,190 @@
+{
+  "info": {
+    "_postman_id": "e1c2da50-0e8f-55b2-8169-82e20b593c62",
+    "name": "Ch 21 - Drift Check (fails on purpose)",
+    "description": "Chapter 21, section *Schema drift*. This collection FAILS ON PURPOSE: it shows two places where the practice API and its contract disagree. Expected result: 3 of 6 assertions fail.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Load the contract",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const spec = pm.response.json();",
+              "",
+              "pm.test('The contract is OpenAPI 3 and describes User', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(spec.openapi).to.match(/^3\\./);",
+              "  pm.expect(spec.components.schemas).to.have.property('User');",
+              "});",
+              "",
+              "// Keep the whole contract for the checks that follow",
+              "pm.collectionVariables.set('openapi', pm.response.text());"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/openapi.json",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "openapi.json"
+          ]
+        },
+        "description": "Downloads the OpenAPI description and keeps it in the collection variable openapi."
+      },
+      "response": []
+    },
+    {
+      "name": "Get user 1 (strict check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const spec = JSON.parse(pm.collectionVariables.get('openapi'));",
+              "const User = spec.components.schemas.User;",
+              "",
+              "pm.test('Strict schema: no fields beyond the contract', function () {",
+              "  // a copy of User that forbids any property it does not list",
+              "  pm.response.to.have.jsonSchema({ ...User, additionalProperties: false });",
+              "});",
+              "",
+              "pm.test('Name the extra fields, if any', function () {",
+              "  const extra = Object.keys(pm.response.json())",
+              "    .filter(k => !Object.keys(User.properties).includes(k));",
+              "  pm.expect(extra, 'fields not in the contract').to.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "1"
+          ]
+        },
+        "description": "A freshly read user has exactly the documented fields: passes."
+      },
+      "response": []
+    },
+    {
+      "name": "Patch user 2 (strict check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const spec = JSON.parse(pm.collectionVariables.get('openapi'));",
+              "const User = spec.components.schemas.User;",
+              "",
+              "pm.test('Strict schema: no fields beyond the contract', function () {",
+              "  // a copy of User that forbids any property it does not list",
+              "  pm.response.to.have.jsonSchema({ ...User, additionalProperties: false });",
+              "});",
+              "",
+              "pm.test('Name the extra fields, if any', function () {",
+              "  const extra = Object.keys(pm.response.json())",
+              "    .filter(k => !Object.keys(User.properties).includes(k));",
+              "  pm.expect(extra, 'fields not in the contract').to.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/users/2",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"manager\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "After a PATCH the API adds updatedAt, which the contract does not list: FAILS (drift)."
+      },
+      "response": []
+    },
+    {
+      "name": "Is v1 documented?",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const spec = JSON.parse(pm.collectionVariables.get('openapi'));",
+              "",
+              "pm.test('/api/v1/users is in the contract', function () {",
+              "  pm.expect(spec.paths).to.have.property('/api/v1/users');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users"
+          ]
+        },
+        "description": "The server answers /api/v1/users, but /openapi.json does not describe it: FAILS (undocumented endpoint)."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "openapi",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

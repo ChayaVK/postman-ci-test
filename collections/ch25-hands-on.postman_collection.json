@@ -1,0 +1,175 @@
+{
+  "info": {
+    "name": "Ch 25 Debugging (hands-on)",
+    "description": "Every request you send in Chapter 25, in the order of the chapter. Select the environment \"Practice API - Local\" first.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 PATCH /api/products/1",
+      "item": [
+        {
+          "name": "PATCH /api/products/1",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/products/1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"price\":10}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 POST /api/echo with a 1.1 MB body",
+      "item": [
+        {
+          "name": "POST /api/echo with a 1.1 MB body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/echo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"{{bigNote}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Build a text of 1.1 MB. The practice API accepts bodies up to 1 MB.",
+                  "pm.variables.set('bigNote', 'x'.repeat(1.1 * 1024 * 1024));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 GET /api/cors/closed",
+      "item": [
+        {
+          "name": "GET /api/cors/closed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:3000"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cors/closed"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "GET /api/cors/open",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:3000"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cors/open"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "OPTIONS /api/cors/open",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "https://shop.example.com"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "POST"
+              },
+              {
+                "key": "Access-Control-Request-Headers",
+                "value": "Content-Type"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cors/open"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 GET /api/insecure/search?q=o'brien",
+      "item": [
+        {
+          "name": "GET /api/insecure/search?q=o'brien",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Request-Id",
+                "value": "bug-search-quote-01"
+              }
+            ],
+            "url": "{{baseUrl}}/api/insecure/search?q=o'brien"
+          },
+          "protocolProfileBehavior": {
+            "followRedirects": false,
+            "disableBodyPruning": true
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ]
+}

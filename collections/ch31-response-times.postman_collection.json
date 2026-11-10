@@ -1,0 +1,100 @@
+{
+  "info": {
+    "_postman_id": "9c46c100-bf52-5fa9-be8f-402c9fa4d25c",
+    "name": "Ch31 Response Time Checks",
+    "description": "# Ch31 Response Time Checks\n\nResponse-time budgets as tests. The budgets are collection variables, so a pipeline can tighten or relax them without editing the tests:\n\n`newman run ... --env-var fastBudgetMs=300`\n\nThe slow request uses `/api/slow?ms={{slowMs}}`: change `slowMs` to see the budget test fail.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Product details within the fast budget",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const budget = Number(pm.variables.get('fastBudgetMs'));",
+              "pm.test(`Product details answered in under ${budget} ms`, () => {",
+              "  pm.expect(pm.response.responseTime).to.be.below(budget);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/products/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Slow report within the slow budget",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const budget = Number(pm.variables.get('slowBudgetMs'));",
+              "pm.test(`Slow report answered in under ${budget} ms`, () => {",
+              "  pm.expect(pm.response.responseTime).to.be.below(budget);",
+              "});",
+              "pm.test('The delay really happened (the test is measuring something)', () => {",
+              "  const asked = Number(pm.variables.get('slowMs'));",
+              "  pm.expect(pm.response.responseTime).to.be.at.least(asked);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/slow?ms={{slowMs}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "slow"
+          ],
+          "query": [
+            {
+              "key": "ms",
+              "value": "{{slowMs}}"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "fastBudgetMs",
+      "value": "500",
+      "type": "string"
+    },
+    {
+      "key": "slowBudgetMs",
+      "value": "1000",
+      "type": "string"
+    },
+    {
+      "key": "slowMs",
+      "value": "300",
+      "type": "string"
+    }
+  ]
+}

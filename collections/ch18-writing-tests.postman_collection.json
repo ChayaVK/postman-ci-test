@@ -1,0 +1,677 @@
+{
+  "info": {
+    "_postman_id": "2d578253-3189-5619-ac2d-bfb4419c0138",
+    "name": "Ch 18 - Writing Tests",
+    "description": "Chapter 18 of the QAMadeEasy course. Every request has tests in **Scripts > Post-response**. Run the whole collection with the environment *Practice API - Local*; every test passes.\n\nThe collection variable `userSchema` holds the User JSON Schema used in folder 5.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 Status, headers and body",
+      "description": "Tests on one successful response: status, headers, response time, body values and types.",
+      "item": [
+        {
+          "name": "Get user 1: status and headers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Content-Type is JSON', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type'))",
+                  "    .to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('ETag is a quoted 16-character hash', function () {",
+                  "  pm.expect(pm.response.headers.get('ETag')).to.match(/^\"[0-9a-f]{16}\"$/);",
+                  "});",
+                  "",
+                  "pm.test('Responds in under 1000 ms', function () {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Checks the status code, Content-Type, ETag and response time."
+          },
+          "response": []
+        },
+        {
+          "name": "Get user 1: body fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const user = pm.response.json();   // parse the body once, reuse it",
+                  "",
+                  "pm.test('Body is user 1, Asha Rao', function () {",
+                  "  pm.expect(user.id).to.eql(1);",
+                  "  pm.expect(user.name).to.eql('Asha Rao');",
+                  "  pm.expect(user.email).to.eql('asha@example.com');",
+                  "});",
+                  "",
+                  "pm.test('Fields have the right types', function () {",
+                  "  pm.expect(user.id).to.be.a('number');",
+                  "  pm.expect(user.name).to.be.a('string').and.not.be.empty;",
+                  "  pm.expect(user.active).to.be.a('boolean');",
+                  "  pm.expect(user.role).to.be.oneOf(['tester', 'developer', 'manager']);",
+                  "});",
+                  "",
+                  "pm.test('createdAt is a valid ISO date', function () {",
+                  "  pm.expect(Date.parse(user.createdAt)).to.not.be.NaN;",
+                  "});",
+                  "",
+                  "pm.test('No password fields leak', function () {",
+                  "  pm.expect(user).to.not.have.any.keys('password', 'passwordHash');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1"
+              ]
+            },
+            "description": "Checks values, types and that no secret fields are returned."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2 Arrays",
+      "description": "Tests on lists: every item, finding one item, counts and order.",
+      "item": [
+        {
+          "name": "List testers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('Returns at least one user', function () {",
+                  "  pm.expect(body.data).to.be.an('array').that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('Every user has role tester', function () {",
+                  "  body.data.forEach(function (u) {",
+                  "    pm.expect(u.role, 'role of user ' + u.id).to.eql('tester');",
+                  "  });",
+                  "});",
+                  "",
+                  "pm.test('Asha Rao (id 1) is in the list', function () {",
+                  "  const asha = body.data.find(u => u.id === 1);",
+                  "  pm.expect(asha, 'user with id 1').to.exist;",
+                  "  pm.expect(asha.name).to.eql('Asha Rao');",
+                  "});",
+                  "",
+                  "pm.test('Count matches total and X-Total-Count', function () {",
+                  "  pm.expect(body.data).to.have.lengthOf(body.total);",
+                  "  pm.expect(Number(pm.response.headers.get('X-Total-Count')))",
+                  "    .to.eql(body.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?role=tester&limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "tester"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Every returned user must have role tester."
+          },
+          "response": []
+        },
+        {
+          "name": "List users sorted by name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const names = pm.response.json().data.map(u => u.name);",
+                  "",
+                  "pm.test('All 8 users fit on one page', function () {",
+                  "  pm.expect(names).to.have.lengthOf(8);",
+                  "});",
+                  "",
+                  "pm.test('Names are in A-Z order', function () {",
+                  "  const sorted = [...names].sort();   // copy, then sort the copy",
+                  "  pm.expect(names).to.eql(sorted);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?sort=name&limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "name"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "The list must come back in A-Z order of name."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3 Error responses",
+      "description": "Negative tests: the error status, code, message and request id.",
+      "item": [
+        {
+          "name": "Get a user that does not exist",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('Status is 404 Not Found', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Error code is USER_NOT_FOUND and names the id', function () {",
+                  "  pm.expect(body.error.code).to.eql('USER_NOT_FOUND');",
+                  "  pm.expect(body.error.message).to.include('999');",
+                  "});",
+                  "",
+                  "pm.test('requestId in the body matches the X-Request-Id header', function () {",
+                  "  pm.expect(body.requestId).to.eql(pm.response.headers.get('X-Request-Id'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "999"
+              ]
+            },
+            "description": "User 999 does not exist: expect 404 with the standard error body."
+          },
+          "response": []
+        },
+        {
+          "name": "Create a user with a bad email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 Bad Request', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error points at the email field only', function () {",
+                  "  const err = pm.response.json().error;",
+                  "  pm.expect(err.code).to.eql('VALIDATION_FAILED');",
+                  "  pm.expect(err.details.map(d => d.field)).to.eql(['email']);",
+                  "});",
+                  "",
+                  "pm.test('Nothing was created (no Location header)', function () {",
+                  "  pm.response.to.not.have.header('Location');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Khan\",\n  \"email\": \"not-an-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Validation error: expect 400 that names the email field."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4 Cookies",
+      "description": "Tests on cookies set by the server.",
+      "item": [
+        {
+          "name": "Session login sets a cookie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Server set a sid cookie', function () {",
+                  "  pm.expect(pm.cookies.has('sid')).to.be.true;",
+                  "  pm.expect(pm.cookies.get('sid')).to.match(/^[0-9a-f-]{36}$/);",
+                  "});",
+                  "",
+                  "pm.test('Cookie is HttpOnly and SameSite=Lax', function () {",
+                  "  const setCookie = pm.response.headers.get('Set-Cookie');",
+                  "  pm.expect(setCookie).to.include('HttpOnly');",
+                  "  pm.expect(setCookie).to.include('SameSite=Lax');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/session/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "session",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cookie login: the server answers with Set-Cookie: sid=..."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5 JSON Schema",
+      "description": "Validate the shape of responses with the User schema (copied from components.schemas.User in /openapi.json).",
+      "item": [
+        {
+          "name": "Get user 1 matches the schema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The User schema is stored once, in the collection variable userSchema",
+                  "const userSchema = JSON.parse(pm.collectionVariables.get('userSchema'));",
+                  "",
+                  "pm.test('Body matches the User schema', function () {",
+                  "  pm.response.to.have.jsonSchema(userSchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List users matches the schema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const userSchema = JSON.parse(pm.collectionVariables.get('userSchema'));",
+                  "const pageSchema = {",
+                  "  type: 'object',",
+                  "  required: ['data', 'page', 'limit', 'total', 'totalPages'],",
+                  "  properties: {",
+                  "    data: { type: 'array', items: userSchema },   // every item is a User",
+                  "    page: { type: 'integer', minimum: 1 },",
+                  "    limit: { type: 'integer', minimum: 1, maximum: 50 },",
+                  "    total: { type: 'integer', minimum: 0 },",
+                  "    totalPages: { type: 'integer', minimum: 0 }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test('Body matches the page-of-users schema', function () {",
+                  "  pm.response.to.have.jsonSchema(pageSchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create user matches the schema",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A new email every run, so the request never hits 409 (Chapter 14)",
+                  "pm.collectionVariables.set('newEmail', `schema.${Date.now()}@example.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const userSchema = JSON.parse(pm.collectionVariables.get('userSchema'));",
+                  "const user = pm.response.json();",
+                  "",
+                  "pm.test('Status is 201 Created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('New user matches the User schema', function () {",
+                  "  pm.response.to.have.jsonSchema(userSchema);",
+                  "});",
+                  "",
+                  "pm.test('Location header points at the new user', function () {",
+                  "  pm.expect(pm.response.headers.get('Location'))",
+                  "    .to.eql('/api/users/' + user.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Schema Check\",\n  \"email\": \"{{newEmail}}\",\n  \"role\": \"developer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6 Exercise answers",
+      "description": "Answers to the Try It Yourself exercises of Chapter 18.",
+      "item": [
+        {
+          "name": "Exercise: product 1 fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const p = pm.response.json();",
+                  "",
+                  "pm.test('Status is 200 OK', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Product 1 has a sensible price, category and stock', function () {",
+                  "  pm.expect(p.price).to.be.a('number').and.be.above(0);",
+                  "  pm.expect(p.category).to.be.oneOf(['electronics', 'stationery', 'home']);",
+                  "  pm.expect(Number.isInteger(p.stock), 'stock is a whole number').to.be.true;",
+                  "  pm.expect(p.stock).to.be.at.least(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exercise: product 1 schema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Product schema, copied from components.schemas.Product in /openapi.json",
+                  "const productSchema = {",
+                  "  type: 'object',",
+                  "  required: ['id', 'name', 'category', 'price', 'stock'],",
+                  "  properties: {",
+                  "    id: { type: 'integer' },",
+                  "    name: { type: 'string' },",
+                  "    category: { type: 'string', enum: ['electronics', 'stationery', 'home'] },",
+                  "    price: { type: 'number' },",
+                  "    stock: { type: 'integer' }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test('Product 1 matches the Product schema', function () {",
+                  "  pm.response.to.have.jsonSchema(productSchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Runs after EVERY request in this collection (order: Chapter 14)",
+          "pm.test('[all] Response has an X-Request-Id header', function () {",
+          "  pm.response.to.have.header('X-Request-Id');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "userSchema",
+      "value": "{\"type\": \"object\", \"required\": [\"id\", \"name\", \"email\", \"role\", \"active\", \"createdAt\"], \"properties\": {\"id\": {\"type\": \"integer\"}, \"name\": {\"type\": \"string\"}, \"email\": {\"type\": \"string\", \"format\": \"email\"}, \"role\": {\"type\": \"string\", \"enum\": [\"tester\", \"developer\", \"manager\"]}, \"active\": {\"type\": \"boolean\"}, \"createdAt\": {\"type\": \"string\", \"format\": \"date-time\"}}}",
+      "type": "string"
+    },
+    {
+      "key": "newEmail",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
